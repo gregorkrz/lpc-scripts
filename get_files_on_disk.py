@@ -7,6 +7,7 @@ from collections import defaultdict
 import pickle
 from urllib.parse import urlparse
 
+from subprocess import STDOUT, check_output
 
 
 def getOS():
@@ -23,14 +24,9 @@ def file_is_available(rep):
     host = urlparse(urls[0]).netloc
     cmd = f"xrdfs {host} stat {filepath}"
     print(cmd)
-    try:
-        subprocess.run(shlex.split(cmd), check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print("...Available!")
-        return True
-    except subprocess.CalledProcessError as e:
-        print("...NOT available!")
-        print(e.returncode, e.output)
-        return False
+    output = check_output(cmd, stderr=STDOUT, timeout=1.0)
+    print(output)
+    return True
 
 def getHosted(dataset, user, allow=None, block=None):
     """Gets list of files on disk for a dataset, and list of sites along with how many files each site has"""
