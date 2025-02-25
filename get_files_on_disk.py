@@ -23,9 +23,18 @@ def file_is_available(rep):
     print("urls", urls)
     host = urlparse(urls[0]).netloc
     cmd = f"xrdfs {host} stat {filepath}"
-    print(cmd)
-    output = check_output(cmd, stderr=STDOUT, timeout=1.0)
-    print(output)
+    #print(cmd)
+    #output = check_output(cmd, stderr=STDOUT, timeout=1.0)
+    #print(output)
+    try:
+        output =subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=1.0)
+        print(output)
+    except subprocess.TimeoutExpired:
+        print("Timeout")
+        return False
+    except subprocess.CalledProcessError as e:
+        print("Error", e)
+        return False
     return True
 
 def getHosted(dataset, user, allow=None, block=None):
