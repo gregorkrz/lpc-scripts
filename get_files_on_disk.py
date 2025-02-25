@@ -21,6 +21,7 @@ def file_is_available(rep):
     urls = list(rep["pfns"].keys())
     host = urlparse(urls[0]).netloc
     cmd = f"xrdfs {host} stat {filepath}"
+    print(cmd)
     try:
         subprocess.run(shlex.split(cmd), check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print("...Available!")
@@ -108,7 +109,6 @@ if __name__=="__main__":
     parser.add_argument("-o","--outfile",type=str,default=None,help="write to this file instead of stdout")
     parser.add_argument("-u","--user",type=str,default=default_user,help="username for rucio")
     parser.add_argument("-v","--verbose",default=False,action="store_true",help="print extra information (site list)")
-    parser.add_argument("-c", "--check", action="store_true", help="check if the file is on disk using xrdfs stat - some nodes don't provide accurate info")
     parser.add_argument("dataset",type=str,help="dataset to query")
     args = parser.parse_args()
 
