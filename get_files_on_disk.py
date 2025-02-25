@@ -5,6 +5,8 @@
 import os,sys,getpass,warnings,glob,shlex,subprocess,argparse # pylint: disable=multiple-imports
 from collections import defaultdict
 import pickle
+from urllib.parse import urlparse
+
 
 
 def getOS():
@@ -12,6 +14,21 @@ def getOS():
     cmd = r"sed -nr 's/[^0-9]*([0-9]+).*/\1/p' /etc/redhat-release"
     osv = subprocess.check_output(shlex.split(cmd), encoding="utf-8").rstrip()
     return osv
+
+def file_is_available(rep):
+    print("Checking if file", rep["name"], "is available on disk")
+    filepath = rep["name"]
+    urls = list(rep["pfns"].keys())
+    host = urlparse(urls[0]).netloc
+    cmd = f"xrdfs {host} stat {filepath}"
+    try:
+        subprocess.run(shlex.split(cmd), check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        print("...Available!")
+        return True
+    except subprocess.CalledProcessError as e:
+        print("...NOT available!")
+        print(e.returncode, e.output)
+        return False
 
 def getHosted(dataset, user, allow=None, block=None):
     """Gets list of files on disk for a dataset, and list of sites along with how many files each site has"""
@@ -47,14 +64,15 @@ def getHosted(dataset, user, allow=None, block=None):
         reps = list(rep_client.list_replicas([{'scope': 'cms', 'name': block['name']} for block in block_group]))
         for rep in reps:
             for site,state in rep['states'].items():
-                if rep["name"] == "/store/mc/RunIISummer20ULPrePremix/Neutrino_E-10_gun/PREMIX/UL18_106X_upgrade2018_realistic_v11_L1v1-v2/00005/43187DF0-9E2B-8A43-A493-2CD77528929A.root":
+                #if rep["name"] == "/store/mc/RunIISummer20ULPrePremix/Neutrino_E-10_gun/PREMIX/UL18_106X_upgrade2018_realistic_v11_L1v1-v2/00005/43187DF0-9E2B-8A43-A493-2CD77528929A.root":
                 #if rep["name"] == "/store/mc/RunIISummer20ULPrePremix/Neutrino_E-10_gun/PREMIX/UL18_106X_upgrade2018_realistic_v11_L1v1-v2/230006/886356A0-2BF3-E045-8F22-B4E204CF50AB.root":
-                    print(rep)
-                    print("------")
+                #    print(rep)
+                #    print("------")
                 if state=='AVAILABLE' and sitecond(site):
-                    filelist.add(rep['name'])
-                    sitelist[site] += 1
-
+                    if file_is_available(rep):
+                        filelist.add(rep['name'])
+                        sitelist[site] += 1
+    print("Found", len(filelist), "available files on disk")
     sys.path.pop(0)
     return filelist, sitelist
 
@@ -90,6 +108,7 @@ if __name__=="__main__":
     parser.add_argument("-o","--outfile",type=str,default=None,help="write to this file instead of stdout")
     parser.add_argument("-u","--user",type=str,default=default_user,help="username for rucio")
     parser.add_argument("-v","--verbose",default=False,action="store_true",help="print extra information (site list)")
+    parser.add_argument("-c", "--check", action="store_true", help="check if the file is on disk using xrdfs stat - some nodes don't provide accurate info")
     parser.add_argument("dataset",type=str,help="dataset to query")
     args = parser.parse_args()
 
