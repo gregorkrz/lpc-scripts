@@ -76,9 +76,9 @@ def getHosted(dataset, user, allow=None, block=None):
                 #    print(rep)
                 #    print("------")
                 if state=='AVAILABLE' and sitecond(site):
-                    if file_is_available(rep):
-                        filelist.add(rep['name'])
-                        sitelist[site] += 1
+                    #if file_is_available(rep):
+                    filelist.add(rep['name'])
+                    sitelist[site] += 1
     print("Found", len(filelist), "available files on disk")
     sys.path.pop(0)
     return filelist, sitelist
