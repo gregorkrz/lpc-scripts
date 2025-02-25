@@ -19,7 +19,7 @@ def file_is_available(rep):
     print("Checking if file", rep["name"], "is available on disk")
     filepath = rep["name"]
     urls = list(rep["pfns"].keys())
-    print("urls")
+    print("urls", urls)
     host = urlparse(urls[0]).netloc
     cmd = f"xrdfs {host} stat {filepath}"
     print(cmd)
